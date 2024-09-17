@@ -1,0 +1,16 @@
+<html>
+<body>
+	<h2>Title</h2>
+	<forum action="/" method="post">
+	<% questions.forEach(function(post) { %>
+		<p><% questions.Question %></p>
+		<ul>
+			<% questions.QuestionAnswers.forEach(function(post) { %>
+			<li><input type="radio"><% Answer %></input></li>
+			<% }) %>
+		</ul>
+	<% }) %>
+	<button type="submit">Sumbit Quiz</button>
+	</forum>
+</body>
+</html>
