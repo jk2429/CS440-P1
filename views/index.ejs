@@ -1,16 +1,20 @@
 <html>
 <body>
 	<h2>Title</h2>
-	<forum action="/" method="post">
-	<% questions.forEach(function(post) { %>
-		<p><% questions.Question %></p>
+	<form action="/" method="post">
+	<% questions.forEach(function(question) { %>
+		<p><%= question.Question %></p>
 		<ul>
-			<% questions.QuestionAnswers.forEach(function(post) { %>
-			<li><input type="radio"><% Answer %></input></li>
+			<% question.QuestionAnswers.forEach(function(answer) { %>
+			<li>
+				<input type="radio" name="<%= question._id %>" value="<%= answer._id %>">
+				<%= answer.Answer %>
+				</input>
+			</li>
 			<% }) %>
 		</ul>
 	<% }) %>
-	<button type="submit">Sumbit Quiz</button>
-	</forum>
+	<button type="submit">Submit Quiz</button>
+	</form>
 </body>
 </html>

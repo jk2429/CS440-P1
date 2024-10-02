@@ -29,6 +29,48 @@ const quizQuestionsSchema = new mongoose.Schema({
 
 const quizQuestions = mongoose.model("quizQuestions", quizQuestionsSchema);
 
+// Function to fill in the database with sample data if it's empty
+const fillDatabase = async () => {
+  const count = await quizQuestions.countDocuments();
+  if (count === 0) {
+    const sampleData = [
+      {
+        Question: "What is the capital of France?",
+        QuestionAnswers: [
+          { Answer: "Paris", Correct: true },
+          { Answer: "London", Correct: false },
+          { Answer: "Rome", Correct: false }
+        ]
+      },
+      {
+        Question: "What is the largest planet in the solar system?",
+        QuestionAnswers: [
+          { Answer: "Earth", Correct: false },
+          { Answer: "Jupiter", Correct: true },
+          { Answer: "Mars", Correct: false }
+        ]
+      },
+      {
+        Question: "What is the chemical symbol for water?",
+        QuestionAnswers: [
+          { Answer: "H2O", Correct: true },
+          { Answer: "O2", Correct: false },
+          { Answer: "CO2", Correct: false }
+        ]
+      }
+    ];
+
+    // Insert sample data into the database
+    await quizQuestions.insertMany(sampleData);
+    console.log("Sample data inserted into the database.");
+  } else {
+    console.log("Database already contains data.");
+  }
+};
+
+// Call the function to fill the database
+fillDatabase().catch(err => console.log(err));
+
 //Default page
 app.get("/", async function(req, res) {
 	const allQuestions = await quizQuestions.find();
@@ -45,24 +87,24 @@ app.post("/", async function(req, res) {
 	const questions = await quizQuestions.find().populate('QuestionAnswers');
 	
 	const feedback = questions.map(questions => {
-		const correctAnswer = question.QuestionAnswers.find(answer => answer.Correct);
-		const userAnswerId = userAnswers[question.id];
-		const isCorrect = correctAnswer && corectAnswer._id.toString() === userAnswerId;
+		const correctAnswer = questions.QuestionAnswers.find(answer => answer.Correct);
+		const userAnswerId = userAnswers[questions.id];
+		const isCorrect = correctAnswer && correctAnswer._id.toString() === userAnswerId;
 		
 		if (isCorrect) {
 			score++;
 		}
 		
 		return {
-			question: question.Question,
+			questions: questions.Question,
 			userAnswerId,
-			correctAnswer: correctAnswer ? corectAnswer.Answer : null,
-			userAnswer: question.QuestionAnswers.find(answer => answer._id.toString() === userAnswerId)?.Answer || "Not Answered",
+			correctAnswer: correctAnswer ? correctAnswer.Answer : null,
+			userAnswer: questions.QuestionAnswers.find(answer => answer._id.toString() === userAnswerId)?.Answer || "Not Answered",
 			isCorrect
 		};
 	});
 	
-	res.render("index", {Questions: questions, Score: score, Feedback: feedback});
+	res.render("index", {questions: questions, score: score, feedback: feedback});
 });
 
 app.listen(3000, function() {
