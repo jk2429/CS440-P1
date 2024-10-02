@@ -34,31 +34,97 @@ const fillDatabase = async () => {
   const count = await quizQuestions.countDocuments();
   if (count === 0) {
     const sampleData = [
-      {
-        Question: "What is the capital of France?",
-        QuestionAnswers: [
-          { Answer: "Paris", Correct: true },
-          { Answer: "London", Correct: false },
-          { Answer: "Rome", Correct: false }
-        ]
-      },
-      {
-        Question: "What is the largest planet in the solar system?",
-        QuestionAnswers: [
-          { Answer: "Earth", Correct: false },
-          { Answer: "Jupiter", Correct: true },
-          { Answer: "Mars", Correct: false }
-        ]
-      },
-      {
-        Question: "What is the chemical symbol for water?",
-        QuestionAnswers: [
-          { Answer: "H2O", Correct: true },
-          { Answer: "O2", Correct: false },
-          { Answer: "CO2", Correct: false }
-        ]
-      }
-    ];
+		{
+			Question: "What is the capital of France?",
+			QuestionAnswers: [
+			  { Answer: "Paris", Correct: true },
+			  { Answer: "London", Correct: false },
+			  { Answer: "Rome", Correct: false },
+			  { Answer: "Berlin", Correct: false }
+			]
+		},
+		{
+			Question: "What is the largest planet in the solar system?",
+			QuestionAnswers: [
+			  { Answer: "Earth", Correct: false },
+			  { Answer: "Jupiter", Correct: true },
+			  { Answer: "Mars", Correct: false },
+			  { Answer: "Venus", Correct: false }
+			]
+		},
+		{
+			Question: "What is the chemical symbol for water?",
+			QuestionAnswers: [
+			  { Answer: "H2O", Correct: true },
+			  { Answer: "O2", Correct: false },
+			  { Answer: "CO2", Correct: false },
+			  { Answer: "HO2", Correct: false }
+			]
+		},
+		{
+			Question: "Who wrote 'To Kill a Mockingbird'?",
+			QuestionAnswers: [
+			  { Answer: "Harper Lee", Correct: true },
+			  { Answer: "Mark Twain", Correct: false },
+			  { Answer: "J.K. Rowling", Correct: false },
+			  { Answer: "George Orwell", Correct: false }
+			]
+		},
+		{
+			Question: "What is the powerhouse of the cell?",
+			QuestionAnswers: [
+			  { Answer: "Mitochondria", Correct: true },
+			  { Answer: "Nucleus", Correct: false },
+			  { Answer: "Ribosome", Correct: false },
+			  { Answer: "Endoplasmic Reticulum", Correct: false }
+			]
+		},
+		{
+			Question: "Which planet is known as the Red Planet?",
+			QuestionAnswers: [
+			  { Answer: "Mars", Correct: true },
+			  { Answer: "Venus", Correct: false },
+			  { Answer: "Saturn", Correct: false },
+			  { Answer: "Mercury", Correct: false }
+			]
+		},
+		{
+			Question: "Who is the author of '1984'?",
+			QuestionAnswers: [
+			  { Answer: "George Orwell", Correct: true },
+			  { Answer: "Aldous Huxley", Correct: false },
+			  { Answer: "Ray Bradbury", Correct: false },
+			  { Answer: "F. Scott Fitzgerald", Correct: false }
+			]
+		},
+		{
+			Question: "What is the hardest natural substance on Earth?",
+			QuestionAnswers: [
+			  { Answer: "Diamond", Correct: true },
+			  { Answer: "Gold", Correct: false },
+			  { Answer: "Iron", Correct: false },
+			  { Answer: "Steel", Correct: false }
+			]
+		},
+		{
+			Question: "How many continents are there on Earth?",
+			QuestionAnswers: [
+			  { Answer: "7", Correct: true },
+			  { Answer: "6", Correct: false },
+			  { Answer: "5", Correct: false },
+			  { Answer: "8", Correct: false }
+			]
+		},
+		{
+			Question: "What is the boiling point of water at sea level?",
+			QuestionAnswers: [
+			  { Answer: "100°C", Correct: true },
+			  { Answer: "50°C", Correct: false },
+			  { Answer: "150°C", Correct: false },
+			  { Answer: "0°C", Correct: false }
+			]
+		}
+	];
 
     // Insert sample data into the database
     await quizQuestions.insertMany(sampleData);
@@ -77,34 +143,34 @@ app.get("/", async function(req, res) {
 	const shuffledQuestions = allQuestions.sort(() => 0.5 - Math.random());
 	const selectedQuestions = shuffledQuestions.slice(0,3);
 	
-	res.render("index", {questions: selectedQuestions, Score: null, feedBack: null});
+	res.render("index", {questions: selectedQuestions, Score: null, feedBack: null, turnedIn: false});
 });
 
 app.post("/", async function(req, res) {
 	const userAnswers = req.body;
-	let score = 0;
-	
-	const questions = await quizQuestions.find().populate('QuestionAnswers');
-	
-	const feedback = questions.map(questions => {
-		const correctAnswer = questions.QuestionAnswers.find(answer => answer.Correct);
-		const userAnswerId = userAnswers[questions.id];
+	const questionsData = JSON.parse(req.body.questionsData); // Retrieve the same questions seen by the user
+
+	// Prepare feedback based on the user's answers
+	const feedback = questionsData.map(question => {
+		const correctAnswer = question.QuestionAnswers.find(answer => answer.Correct);
+		const userAnswerId = userAnswers[question._id];
 		const isCorrect = correctAnswer && correctAnswer._id.toString() === userAnswerId;
-		
-		if (isCorrect) {
-			score++;
-		}
-		
+
+		// Create feedback for each question
 		return {
-			questions: questions.Question,
+			question: question.Question,
 			userAnswerId,
 			correctAnswer: correctAnswer ? correctAnswer.Answer : null,
-			userAnswer: questions.QuestionAnswers.find(answer => answer._id.toString() === userAnswerId)?.Answer || "Not Answered",
-			isCorrect
+			userAnswer: question.QuestionAnswers.find(answer => answer._id.toString() === userAnswerId)?.Answer || "Not Answered",
+			isCorrect,
+			answers: question.QuestionAnswers // Store the list of answers for this question
 		};
 	});
-	
-	res.render("index", {questions: questions, score: score, feedback: feedback});
+
+	const score = feedback.filter(fb => fb.isCorrect).length;
+
+	// Render the same questions back to the user along with their feedback
+	res.render("index", { questions: questionsData, score: score, feedback: feedback, turnedIn: true });
 });
 
 app.listen(3000, function() {
