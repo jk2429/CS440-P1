@@ -173,6 +173,40 @@ app.post("/", async function(req, res) {
 	res.render("index", { questions: questionsData, score: score, feedback: feedback, turnedIn: true });
 });
 
+app.get("/addQuestion", async function(req, res) {
+	res.render("addQuestion", {});
+});
+
+app.post("/addQuestion", async function(req,res) {
+	try {
+		// Collect the form data
+		const { question, answer1, answer2, answer3, answer4, correctAnswer } = req.body;
+
+		// Create an array of answers with the correct answer marked
+		const answers = [
+			{ Answer: answer1, Correct: correctAnswer === "0" },
+			{ Answer: answer2, Correct: correctAnswer === "1" },
+			{ Answer: answer3, Correct: correctAnswer === "2" },
+			{ Answer: answer4, Correct: correctAnswer === "3" }
+		];
+
+		// Create a new quiz question
+		const newQuestion = new quizQuestions({
+			Question: question,
+			QuestionAnswers: answers
+		});
+
+		// Save the new question to the database
+		await newQuestion.save();
+
+		// Redirect back to the home page or to a success page
+		res.redirect("/");
+	} catch (error) {
+		console.log("Error adding question:", error);
+		res.status(500).send("Error adding question.");
+	}
+});
+
 app.listen(3000, function() {
 	console.log("Server Started on port 3000");
 });
