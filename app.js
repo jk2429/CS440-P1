@@ -207,6 +207,51 @@ app.post("/addQuestion", async function(req,res) {
 	}
 });
 
+app.get("/deleteQuestion/:id", async function(req, res) {
+    try {
+        await quizQuestions.findByIdAndDelete(req.params.id);
+        console.log("Question deleted");
+        res.redirect("/");
+    } catch (error) {
+        console.error("Failed to delete question:", error);
+        res.status(500).send("Failed to delete question.");
+    }
+});
+
+app.get("/editQuestion/:id", async function(req, res) {
+    try {
+        const question = await quizQuestions.findById(req.params.id);
+        res.render("editQuestion", { question: question });
+    } catch (error) {
+        console.error("Error loading the edit form:", error);
+        res.status(500).send("Error loading the edit form.");
+    }
+});
+
+// Update Question
+app.post("/updateQuestion/:id", async function(req, res) {
+    try {
+        const { question, answer0, answer1, answer2, answer3, correctAnswer } = req.body;
+        const updatedAnswers = [
+            { Answer: answer0, Correct: correctAnswer === "0" },
+            { Answer: answer1, Correct: correctAnswer === "1" },
+            { Answer: answer2, Correct: correctAnswer === "2" },
+            { Answer: answer3, Correct: correctAnswer === "3" }
+        ];
+
+        await quizQuestions.findByIdAndUpdate(req.params.id, {
+            Question: question,
+            QuestionAnswers: updatedAnswers
+        });
+
+        console.log("Question updated");
+        res.redirect("/"); // Redirect to the main page or another appropriate page
+    } catch (error) {
+        console.error("Error updating question:", error);
+        res.status(500).send("Error updating question.");
+    }
+});
+
 app.listen(3000, function() {
 	console.log("Server Started on port 3000");
 });

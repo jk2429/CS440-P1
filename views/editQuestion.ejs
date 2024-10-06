@@ -1,0 +1,18 @@
+<html>
+<head>
+    <title>Edit Question</title>
+</head>
+<body>
+    <h2>Edit Question</h2>
+    <form action="/updateQuestion/<%= question._id %>" method="post">
+        <p>Question: <input type="text" name="question" value="<%= question.Question %>"></p>
+        <% question.QuestionAnswers.forEach(function(answer, index) { %>
+            Answer <%= index + 1 %>:
+            <input type="text" name="answer<%= index %>" value="<%= answer.Answer %>">
+            <input type="radio" name="correctAnswer" value="<%= index %>" <%= answer.Correct ? 'checked' : '' %>>
+            <br>
+        <% }) %>
+        <button type="submit">Update Question</button>
+    </form>
+</body>
+</html>
